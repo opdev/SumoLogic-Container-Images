@@ -22,8 +22,8 @@ FROM registry.access.redhat.com/ubi8/ubi
 
 ENV NAME=golang \
     GO_MAJOR_VERSION=1 \
-    GO_MINOR_VERSION=15 \
-    GO_PATCH_VERSION=7 \
+    GO_MINOR_VERSION=16 \
+    GO_PATCH_VERSION=5 \
     CONTAINER_NAME="rhel8/go-toolset"
 
 # Define the VERSION environment variable in a separate step, so we can
