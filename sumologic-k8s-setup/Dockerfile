@@ -1,5 +1,17 @@
 FROM registry.access.redhat.com/ubi8/ubi
 
+
+### Requiered Labels#####
+LABEL name="SumoLogic Kubernetes Setup" \
+      vendor="SumoLogic" \
+      version="1.0" \
+      release="1" \
+      summary="SumoLogic k8s setup" \
+      description="This will ...."
+
+### Required End User Agreements### 
+COPY licenses /licenses
+
 ENV TERRAFORM_VERSION=0.13.7
 ARG TARGETPLATFORM
 
