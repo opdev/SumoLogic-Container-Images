@@ -1,0 +1,16 @@
+# This patch adds tailing sidecar image as container args
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: operator
+  namespace: system
+spec:
+  template:
+    spec:
+      serviceAccountName: tailing-sidecar-service-account
+      containers:
+      - name: manager
+        args:
+        - "--metrics-addr=127.0.0.1:8080"
+        - "--enable-leader-election"
+        - "--tailing-sidecar-image=sumologic/tailing-sidecar:latest"
