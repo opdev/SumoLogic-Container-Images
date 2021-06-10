@@ -18,7 +18,7 @@
 # CMD ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.conf", "--quiet"]
 
 #This is for the first go based image
-FROM registry.access.redhat.com/ubi8/ubi
+FROM registry.access.redhat.com/ubi8/ubi as go-builder
 
 ENV NAME=golang \
     GO_MAJOR_VERSION=1 \
@@ -57,3 +57,15 @@ RUN mkdir /build
 ADD ./out_gstdout /build/
 WORKDIR /build
 RUN make all
+
+
+FROM registry.redhat.io/openshift-logging/fluentd-rhel8
+ENV LOG_LEVEL=warning
+
+COPY --from=go-builder \
+  /build/out_gstdout.so \
+  /tailing-sidecar/lib/
+
+COPY conf/fluent-bit.conf \
+  conf/plugins.conf \
+  /fluent-bit/etc/
