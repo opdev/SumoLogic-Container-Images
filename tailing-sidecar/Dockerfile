@@ -69,3 +69,5 @@ COPY --from=go-builder \
 COPY conf/fluent-bit.conf \
   conf/plugins.conf \
   /fluent-bit/etc/
+
+CMD ["/fluent-bit/bin/fluent-bit", "-c", "/fluent-bit/etc/fluent-bit.conf", "--quiet"]
