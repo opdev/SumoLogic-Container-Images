@@ -1,4 +1,4 @@
-FROM golang:1.16.5 as go-builder
+FROM registry.access.redhat.com/ubi8/go-toolset:latest as go-builder
 RUN mkdir /build
 ADD ./out_gstdout /build/
 WORKDIR /build
