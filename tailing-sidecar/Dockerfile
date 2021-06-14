@@ -20,6 +20,18 @@
 #This is for the first go based image
 FROM registry.access.redhat.com/ubi8/ubi as go-builder
 
+### Requiered Labels#####
+LABEL name="Tailing Sidecar" \
+      vendor="SumoLogic" \
+      version="1.0" \
+      release="1" \
+      summary="SumoLogic tailing sidecar" \
+      description="This will ...."
+
+### Required End User Agreements### 
+COPY licenses /licenses
+
+
 ENV NAME=golang \
     GO_MAJOR_VERSION=1 \
     GO_MINOR_VERSION=16 \
