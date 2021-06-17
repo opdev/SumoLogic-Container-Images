@@ -59,7 +59,7 @@ WORKDIR /build
 RUN make all
 
 
-FROM registry.redhat.io/openshift-logging/fluentd-rhel8
+FROM docker.io/library/fluent-bit-test:latest
 ENV LOG_LEVEL=warning
 
 COPY --from=go-builder \
