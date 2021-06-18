@@ -2,15 +2,15 @@ FROM registry.access.redhat.com/ubi8/ubi as builder
 RUN dnf update && dnf install -y cmake diffutils gcc gcc-c++ libpq-devel m4 make openssl-devel systemd-devel tar unzip && dnf clean all
 
 ADD https://github.com/fluent/fluent-bit/archive/refs/tags/v1.7.2.zip /source.zip
-RUN mkdir -p /fluent-bit/bin /fluent-bit/etc /fluent-bit/log /tmp/src
-RUN unzip /source.zip -d /tmp/src && mv /tmp/src/fluent-bit-*/* /tmp/src/
-RUN rm -rf /tmp/src/build/*
+RUN mkdir -p /fluent-bit/bin /fluent-bit/etc /fluent-bit/log /tmp/src && \
+    unzip /source.zip -d /tmp/src && mv /tmp/src/fluent-bit-*/* /tmp/src/ && \
+    rm -rf /tmp/src/build/*
 
-ADD http://ftp.gnu.org/gnu/bison/bison-3.7.tar.gz /bison/
-ADD https://github.com/westes/flex/files/981163/flex-2.6.4.tar.gz /flex/
-RUN tar -xzvf /bison/bison-3.7.tar.gz -C /bison/ && tar -xzvf /flex/flex-2.6.4.tar.gz -C /flex/
-RUN cd /bison/bison*/ && ./configure && make && make install
-RUN cd /flex/flex*/ && ./configure && make && make install
+ADD http://ftp.gnu.org/gnu/bison/bison-3.7.tar.gz /bison/ && \
+    https://github.com/westes/flex/files/981163/flex-2.6.4.tar.gz /flex/
+RUN tar -xzvf /bison/bison-3.7.tar.gz -C /bison/ && tar -xzvf /flex/flex-2.6.4.tar.gz -C /flex/ && \
+    cd /bison/bison*/ && ./configure && make && make install && \
+    cd /flex/flex*/ && ./configure && make && make install
 
 WORKDIR /tmp/src/build/
 RUN cmake -DFLB_RELEASE=On -DFLB_TLS=On ../ && make && install bin/fluent-bit /fluent-bit/bin/
