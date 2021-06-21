@@ -70,8 +70,7 @@ ADD ./out_gstdout /build/
 WORKDIR /build
 RUN make all
 
-
-FROM docker.io/library/fluent-bit-test:latest
+FROM  quay.io/yoza/fluent-bit-ubi:latest
 ENV LOG_LEVEL=warning
 
 COPY --from=go-builder \
