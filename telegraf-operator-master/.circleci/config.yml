@@ -1,0 +1,104 @@
+version: 2
+
+workflows:
+  version: 2
+  build:
+    jobs:
+      - build
+  container-image:
+    jobs:
+      - container_image:
+          filters:
+            branches:
+              only: master
+  container-image-release:
+    jobs:
+      - container_image_release:
+          filters:
+            tags:
+              only: /^v.*/
+            branches:
+              ignore: /.*/
+
+jobs:
+  build:
+    docker:
+      - image: circleci/golang:1.16 # We shell out to git in tests, and circleci/golang should have it installed.
+
+    working_directory: ~/telegraf-operator # Doesn't need to be in GOPATH since it's a Go module.
+
+    environment:
+      GOCACHE: /tmp/go-cache
+      GOFLAGS: '-mod=readonly -p=8' # Go on Circle thinks 32 CPUs are available, but there aren't.
+
+      # Set environment variables instead of touching global git config.
+      # Without these set, some commands (like git am) will fail due to unknown user names.
+      GIT_AUTHOR_NAME: circleci
+      GIT_COMMITTER_NAME: circleci
+
+    steps:
+      - checkout
+
+      # Populate GOCACHE.
+      - restore_cache:
+          name: Restoring GOCACHE
+          keys:
+            - telegraf-operator-gocache-{{ .Branch }}-{{ .Revision }} # Matches when retrying a single run.
+            - telegraf-operator-gocache-{{ .Branch }}- # Matches a new commit on an existing branch.
+            - telegraf-operator-gocache- # Matches a new branch.
+      # Populate GOPATH/pkg.
+      - restore_cache:
+          name: Restoring GOPATH/pkg/mod
+          keys:
+            - telegraf-operator-gomod-{{ checksum "go.sum" }} # Matches based on go.sum checksum.
+
+      # Add the backport source for new git, and install it.
+      - run: echo 'deb http://deb.debian.org/debian stretch-backports main' | sudo tee /etc/apt/sources.list.d/stretch-backports.list
+      - run: sudo apt-get update
+      - run: sudo apt-get -t stretch-backports install -y git
+      - run: git version
+
+      # Build the binaries for the integration tests.
+      - run: go build -race
+      # The actual test.
+      - run: go test -v -race ./...
+
+      # Save the caches.
+      - save_cache:
+          name: Saving GOCACHE
+          key: telegraf-operator-gocache-{{ .Branch }}-{{ .Revision }}
+          paths:
+            - /tmp/go-cache
+          when: always
+      - save_cache:
+          name: Saving GOPATH/pkg/mod
+          key: telegraf-operator-gomod-{{ checksum "go.sum" }}
+          paths:
+            - /go/pkg/mod
+          when: always
+  container_image:
+    docker:
+      - image: docker:stable-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Docker build and push using SHA
+          command: |
+            IMAGE="quay.io/influxdb/telegraf-operator"
+            docker build --no-cache -t "$IMAGE:$CIRCLE_SHA1" .
+            docker login -u "$QUAY_USER" -p "$QUAY_PASS" quay.io
+            docker push "$IMAGE:$CIRCLE_SHA1"
+  container_image_release:
+    docker:
+      - image: docker:stable-git
+    steps:
+      - checkout
+      - setup_remote_docker
+      - run:
+          name: Docker build and push using release tag
+          command: |
+            IMAGE="quay.io/influxdb/telegraf-operator"
+            docker build --no-cache -t "$IMAGE:$CIRCLE_TAG" .
+            docker login -u "$QUAY_USER" -p "$QUAY_PASS" quay.io
+            docker push "$IMAGE:$CIRCLE_TAG"
