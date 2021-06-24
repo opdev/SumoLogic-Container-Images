@@ -25,9 +25,10 @@ RUN if [ "${TARGETPLATFORM}" = "linux/amd64" ]; then TERRAFORM_PLATFORM="linux_a
  && unzip terraform.zip \
  && mv terraform /usr/local/bin/ \
  && rm terraform.zip \
- # ping group has a conflicting id: 999 so delete it
- && groupadd -g 993 setup \
- && useradd -u 933 setup -g setup \
+ && groupdel input \
+ && userdel systemd-coredump \
+ && groupadd -g 999 setup \
+ && useradd -u 999 -g setup setup \
  && mkdir /terraform /scripts \
  && chown -R setup:setup /terraform /scripts
 
