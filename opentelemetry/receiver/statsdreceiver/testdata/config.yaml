@@ -1,0 +1,20 @@
+receivers:
+  statsd:
+  statsd/receiver_settings:
+    endpoint: "localhost:12345"
+    transport: "custom_transport"
+    aggregation_interval: 70s
+    enable_metric_type: false
+
+processors:
+  nop:
+
+exporters:
+  nop:
+
+service:
+  pipelines:
+    metrics:
+     receivers: [statsd]
+     processors: [nop]
+     exporters: [nop]

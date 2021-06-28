@@ -1,0 +1,25 @@
+receivers:
+  nop:
+
+processors:
+  nop:
+
+exporters:
+  newrelic:
+  newrelic/alt:
+    apikey: a1b2c3d4
+    timeout: 30s
+    common_attributes:
+      server: test-server
+      prod: true
+      weight: 3
+    metrics_host_override: alt.metrics.newrelic.com
+    spans_host_override: alt.spans.newrelic.com
+
+service:
+  pipelines:
+    traces:
+        receivers: [nop]
+        processors: [nop]
+        exporters: [newrelic]
+

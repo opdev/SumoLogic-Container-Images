@@ -1,0 +1,70 @@
+receivers:
+  nop:
+
+exporters:
+  nop:
+
+processors:
+  tail_sampling:
+    decision_wait: 10s
+    num_traces: 100
+    expected_new_traces_per_sec: 10
+    policies:
+      [
+          {
+            name: test-policy-1,
+            type: always_sample
+          },
+          {
+            name: test-policy-2,
+            type: numeric_attribute,
+            numeric_attribute: {key: key1, min_value: 50, max_value: 100}
+          },
+          {
+            name: test-policy-3,
+            type: string_attribute,
+            string_attribute: {key: key2, values: [value1, value2]}
+          },
+          {
+            name: test-policy-4,
+            type: rate_limiting,
+            rate_limiting: {spans_per_second: 35}
+          },
+          {
+            name: test-policy-5,
+            type: cascading,
+            spans_per_second: 1000,
+            rules: [
+              {
+                name: "num",
+                spans_per_second: 123,
+                numeric_attribute: {key: key1, min_value: 50, max_value: 100}
+              },
+              {
+                name: "dur",
+                spans_per_second: 50,
+                properties: {min_duration_micros: 9000000 }
+              },
+              {
+                name: "everything_else",
+                spans_per_second: -1
+              }
+            ]
+         },
+         {
+            name: test-policy-6,
+            type: properties,
+            properties: {
+              name_pattern: "foo.*",
+              min_number_of_spans: 10,
+              min_duration_micros: 9000000
+            }
+         },
+      ]
+
+service:
+  pipelines:
+    traces:
+      receivers: [nop]
+      processors: [tail_sampling]
+      exporters: [nop]
