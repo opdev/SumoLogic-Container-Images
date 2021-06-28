@@ -7,6 +7,8 @@ ENV NAME=golang \
     GO_PATCH_VERSION=5 \
     CONTAINER_NAME="rhel8/go-toolset"
 
+COPY licenses /licenses
+
 # Define the VERSION environment variable in a separate step, so we can
 # re-use the GO_MAJOR_VERSION, GO_MINOR_VERSION and GO_PATCH_VERSION variables. 
 ENV VERSION=$GO_MAJOR_VERSION.$GO_MINOR_VERSION.$GO_PATCH_VERSION \
@@ -51,6 +53,5 @@ RUN CGO_ENABLED=0 GOOS=linux GOARCH=amd64 GO111MODULE=on go build -a -o manager 
 FROM registry.access.redhat.com/ubi8/ubi-minimal:latest
 WORKDIR /
 COPY --from=builder /workspace/manager .
-USER nonroot:nonroot
 
 ENTRYPOINT ["/manager"]
