@@ -1,47 +1,21 @@
-# Tailing sidecar operator
+# tailing-sidecar
 
-*Tailing sidecar operator* automatically adds
-[streaming sidecar containers](https://kubernetes.io/docs/concepts/cluster-administration/logging/#streaming-sidecar-container)
-which use [tailing sidecar image](../sidecar/) to Pods based on configuration provided in annotation.
+![Project Status](https://img.shields.io/badge/status-alpha-important?style=for-the-badge)
 
-Configuration for tailing sidecar operator is described [here](docs/configuration.md).
+## TL;DR
 
-To quickly see benefits of using tailing sidecar operator try it in prepared [Vagrant environment](#testing-in-Vagrant-environment).
-
-## Deploy tailing sidecar operator
-
-### Prerequisities
-
-- [cert-manager](https://cert-manager.io/docs/installation/)
-- [admission webhooks](https://kubernetes.io/docs/reference/access-authn-authz/extensible-admission-controllers/#prerequisites)
-  enabled
-- [kustomize](https://kustomize.io/)
-
-### Set images (optional)
-
-Set tailing sidecar image:
-
-```bash
-export TAILING_SIDECAR_IMG="<some-registry>/<project-name>:tag"
-sed -i.backup "s#sumologic/tailing-sidecar:latest#${TAILING_SIDECAR_IMG}#g" config/default/manager_patch.yaml
+```sh
+helm repo add tailing-sidecar https://sumologic.github.io/tailing-sidecar
+helm repo update
 ```
 
-Set tailing-sidecar operator image:
-
-```bash
-export TAILING_SIDECAR_OPERATOR_IMG="<some-registry>/<project-name>:tag"
-(cd config/manager && kustomize edit set image controller="${TAILING_SIDECAR_OPERATOR_IMG}")
+```sh
+helm upgrade --install tailing-sidecar tailing-sidecar/tailing-sidecar-operator \
+  -n tailing-sidecar-system \
+  --create-namespace
 ```
 
-### Deploy operator
-
-```bash
-kustomize build config/default | kubectl apply -f -
-```
-
-### Test operator
-
-Add annotation to Pod in following form:
+Add `tailing-sidecar` annotation to Pod:
 
 ```yaml
 metadata:
@@ -49,74 +23,34 @@ metadata:
     tailing-sidecar: <sidecar-name-0>:<volume-name-0>:<path-to-tail-0>;<sidecar-name-1>:<volume-name-1>:<path-to-tail-1>
 ```
 
-to learn more about configuration see [this](docs/configuration.md).
+## Tailing Sidecar
 
-Deploy Pod with `tailing-sidecar` annotation e.g.
+**tailing sidecar** is a [streaming sidecar container](https://kubernetes.io/docs/concepts/cluster-administration/logging/#streaming-sidecar-container),
+the cluster-level logging agent for Kubernetes.
 
-```bash
-kubectl apply -f examples/pod_with_annotations.yaml
-```
+It helps when your application inside the Pod cannot write to standard output and/or standard error stream
+or when it outputs additional logs to a file instead (eg. the gc.log).
 
-Check logs from tailing sidecar e.g.
+It [tails](https://en.wikipedia.org/wiki/Tail_(Unix)) the files inside Kubernetes Pods,
+handling situations like the file not being there when tailing starts, tailing multiple files, rotating files, etc.
 
-```bash
-kubectl logs pod-with-annotations tailing-sidecar-0  --tail 5 -n tailing-sidecar-system
-```
+It uses [Fluent Bit](https://fluentbit.io/) under the hood, benefiting from its performance.
 
-## Build and push tailing sidecar operator image to container registry
+For more information about cluster-level logging architecture please read Kubernetes
+[documentation](https://kubernetes.io/docs/concepts/cluster-administration/logging/#cluster-level-logging-architectures).
 
-To build tailing sidecar operator image:
+The project consists of two parts:
 
-```bash
-make docker-build IMG="<some-registry>/<project-name>:tag"
-```
+- [tailing sidecar container image](sidecar/) which can be used to manually extend Pods by tailing sidecars
+- [tailing sidecar operator](operator/) which automatically adds tailing sidecars to Pods based on configuration
+  provided in annotation
 
-To push tailing sidecar operator image to container registry:
+## License
 
-```bash
-make docker-push IMG="<some-registry>/<project-name>:tag"
-```
+This project is released under the [Apache 2.0 License](LICENSE).
 
-## Testing in Vagrant environment
+## Contributing
 
-Start and provision the Vagrant environment:
+Please share your thoughts about tailing sidecar by opening an [issue](https://github.com/SumoLogic/tailing-sidecar/issues/new).
 
-```bash
-vagrant up
-```
-
-Connect to virtual machine:
-
-```bash
-vagrant ssh
-```
-
-Build and push tailing sidecar image to local container registry:
-
-```bash
-/tailing-sidecar/sidecar/Makefile
-```
-
-Go to operator directory:
-
-```bash
-cd /tailing-sidecar/operator
-```
-
-Deploy operator:
-
-```bash
-make
-```
-
-Deploy examples:
-
-```bash
-make deploy-examples
-```
-
-Check that operator added tailing sidecars to example resources:
-
-```bash
-make check-examples
-```
+To get started contributing, please refer to our [Contributing](CONTRIBUTING.md) documentation.

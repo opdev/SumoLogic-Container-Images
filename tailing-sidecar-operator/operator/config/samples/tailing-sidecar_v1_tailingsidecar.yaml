@@ -1,0 +1,9 @@
+apiVersion: tailing-sidecar.sumologic.com/v1
+kind: TailingSidecar
+metadata:
+  name: tailingsidecar-sample
+spec:
+  configs:
+    sidecarconfig:
+      volume: varlogconfig
+      file: /varconfig/log/example2.log
